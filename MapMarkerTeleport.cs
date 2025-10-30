@@ -11,7 +11,7 @@ using UnityEngine;
 
 namespace Oxide.Plugins
 {
-    [Info("Map Marker Teleport", "VisEntities", "1.0.1")]
+    [Info("Map Marker Teleport", "VisEntities", "1.0.2")]
     [Description("Place a map marker and instantly teleport there.")]
     public class MapMarkerTeleport : RustPlugin
     {
@@ -84,7 +84,7 @@ namespace Oxide.Plugins
                 if (player.IsConnected)
                 {
                     player.UpdateNetworkGroup();
-                    player.SendNetworkUpdateImmediate(false);
+                    player.SendNetworkUpdateImmediate();
 
                     if (putToSleep)
                     {
@@ -102,7 +102,7 @@ namespace Oxide.Plugins
             if (putToSleep && wakeUp)
             {
                 player.EndSleeping();
-                player.SendNetworkUpdateImmediate(false);
+                player.SendNetworkUpdateImmediate();
             }
         }
 
