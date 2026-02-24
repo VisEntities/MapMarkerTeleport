@@ -60,6 +60,9 @@ namespace Oxide.Plugins
                 return;
 
             Teleport(player, dest);
+
+            player.State.pointsOfInterest = null;
+            player.SendMarkersToClient();
         }
 
         #endregion Oxide Hooks
