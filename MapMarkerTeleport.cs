@@ -1,9 +1,10 @@
 ﻿/*
- * Copyright (C) 2024 Game4Freak.io
+ * Copyright (C) 2026 Game4Freak.io
  * This mod is provided under the Game4Freak EULA.
  * Full legal terms can be found at https://game4freak.io/eula/
  */
 
+using Oxide.Core;
 using ProtoBuf;
 using Rust;
 using System.Collections.Generic;
@@ -12,13 +13,13 @@ using UnityEngine;
 namespace Oxide.Plugins
 {
     [Info("Map Marker Teleport", "VisEntities", "1.0.2")]
-    [Description("Place a map marker and instantly teleport there.")]
+    [Description("Teleport to any location by placing a map marker.")]
     public class MapMarkerTeleport : RustPlugin
     {
         #region Fields
 
         private static MapMarkerTeleport _plugin;
-        public const int LAYER_GROUND = Layers.Mask.Terrain | Layers.Mask.World | Layers.Mask.Default | Layers.Mask.Construction;
+        public const int GROUND_LAYERS = Layers.Mask.Terrain | Layers.Mask.World | Layers.Mask.Default | Layers.Mask.Construction;
 
         #endregion Fields
 
@@ -47,8 +48,16 @@ namespace Oxide.Plugins
             RaycastHit hit;
             const float range = 100f;
 
-            if (TerrainUtil.GetGroundInfo(dest, out hit, range, LAYER_GROUND))
+            if (GetGroundInfo(dest, out hit, range, GROUND_LAYERS))
                 dest = hit.point + Vector3.up * 0.25f;
+
+            float waterLevel = WaterLevel.GetWaterLevel(dest, waves: true);
+            if (waterLevel > dest.y)
+                dest.y = waterLevel;
+
+            object hookResult = Interface.CallHook("OnMapMarkerTeleport", player, dest);
+            if (hookResult != null)
+                return;
 
             Teleport(player, dest);
         }
@@ -134,36 +143,13 @@ namespace Oxide.Plugins
 
         #endregion Permissions
 
-        #region Helper Classes
-
-        public static class TerrainUtil
-        {
-            public static bool GetGroundInfo(Vector3 startPosition, out RaycastHit raycastHit, float range, LayerMask mask)
+        #region Helpers
+           
+        public static bool GetGroundInfo(Vector3 startPosition, out RaycastHit raycastHit, float range, LayerMask mask)
             {
                 return Physics.Linecast(startPosition + new Vector3(0.0f, range, 0.0f), startPosition - new Vector3(0.0f, range, 0.0f), out raycastHit, mask);
             }
-
-            public static bool GetGroundInfo(Vector3 startPosition, out RaycastHit raycastHit, float range, LayerMask mask, Transform ignoreTransform = null)
-            {
-                startPosition.y += 0.25f;
-                range += 0.25f;
-                raycastHit = default;
-
-                RaycastHit hit;
-                if (!GamePhysics.Trace(new Ray(startPosition, Vector3.down), 0f, out hit, range, mask, QueryTriggerInteraction.UseGlobal, null))
-                    return false;
-
-                if (ignoreTransform != null && hit.collider != null
-                    && (hit.collider.transform == ignoreTransform || hit.collider.transform.IsChildOf(ignoreTransform)))
-                {
-                    return GetGroundInfo(startPosition - new Vector3(0f, 0.01f, 0f), out raycastHit, range, mask, ignoreTransform);
-                }
-
-                raycastHit = hit;
-                return true;
-            }
-        }
-
-        #endregion Helper Classes
+        
+        #endregion Helper Helpers
     }
 }
