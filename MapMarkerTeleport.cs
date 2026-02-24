@@ -12,7 +12,7 @@ using UnityEngine;
 
 namespace Oxide.Plugins
 {
-    [Info("Map Marker Teleport", "VisEntities", "1.0.2")]
+    [Info("Map Marker Teleport", "VisEntities", "1.1.0")]
     [Description("Teleport to any location by placing a map marker.")]
     public class MapMarkerTeleport : RustPlugin
     {
